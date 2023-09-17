@@ -11,10 +11,6 @@
 
 <script setup lang="ts">
 import { showToast } from 'vant';
-
-let x: any;
-x = '9999';
-console.log(x);
 </script>
 
 <style scoped></style>
