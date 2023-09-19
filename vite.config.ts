@@ -11,4 +11,14 @@ export default defineConfig({
       '#': fileURLToPath(new URL('./src/types', import.meta.url))
     }
   }
+  // server: {
+  //   port: 5173,
+  //   host: '0.0.0.0',
+  //   proxy: {
+  //     '/api': {
+  //       target: 'http://bitbuilder.sit.ninetechone.com/api',
+  //       changeOrigin: true
+  //     }
+  //   }
+  // }
 });
