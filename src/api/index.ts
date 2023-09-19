@@ -6,6 +6,7 @@ const request = (config: RequestConfig) => {
   config.header = config.header || {};
   config.loading = !!config.loading;
   const token = uni.getStorageSync('token') || '';
+
   let loadingStatus = true;
   setTimeout(() => {
     if (loadingStatus && config.loading) {
@@ -22,10 +23,19 @@ const request = (config: RequestConfig) => {
       data: config.data,
       header: {
         authorization: token,
-        'Content-Type': config.header
+        ...config.header
       },
       success: res => {
-        handleCode(res, resolve, reject);
+        console.log('success', res);
+        if (res.statusCode === 200) {
+          handleCode(res.data, resolve, reject);
+        } else {
+          const errData = {
+            code: res.statusCode,
+            message: (res.data as any)?.message
+          };
+          handleCode(errData, resolve, reject);
+        }
       },
       fail: err => {
         handleCode(err, resolve, reject);
