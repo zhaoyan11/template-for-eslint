@@ -61,30 +61,30 @@ const handleCode = (
   if (code || message || data) {
     const msg = message || '未知错误';
     switch (code) {
-      // case ETIMEDOUT:
-      //   const timeoutTip = config?.timeoutTip ?? '接口请求超时，请刷新界面';
-      //   ElMessage.error(timeoutTip);
-      //   reject({ data, code, message, timeout });
-      //   break;
-      case '200':
-        resolve({ data, code });
-        break;
-      case '401':
-      case 401:
-        uni.removeStorageSync('token');
-        uni.showToast({
-          icon: 'none',
-          title: '登录失效'
-        });
+    // case ETIMEDOUT:
+    //   const timeoutTip = config?.timeoutTip ?? '接口请求超时，请刷新界面';
+    //   ElMessage.error(timeoutTip);
+    //   reject({ data, code, message, timeout });
+    //   break;
+    case '200':
+      resolve({ data, code });
+      break;
+    case '401':
+    case 401:
+      uni.removeStorageSync('token');
+      uni.showToast({
+        icon: 'none',
+        title: '登录失效'
+      });
 
-        // TODO: 跳转到登录页面
-        break;
-      default:
-        uni.showToast({
-          icon: 'none',
-          title: msg
-        });
-        reject({ data, code, message });
+      // TODO: 跳转到登录页面
+      break;
+    default:
+      uni.showToast({
+        icon: 'none',
+        title: msg
+      });
+      reject({ data, code, message });
     }
   } else {
     reject(res);

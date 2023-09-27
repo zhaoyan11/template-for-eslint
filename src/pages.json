@@ -17,6 +17,12 @@
 			"style": {
 				"navigationBarTitleText": "流程中心"
 			}
+		},
+		{
+			"path": "pages/dashboard/index",
+			"style": {
+				"navigationBarTitleText": "仪表盘"
+			}
 		}
 	],
 	"globalStyle": {

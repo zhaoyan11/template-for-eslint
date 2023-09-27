@@ -51,3 +51,13 @@ export const getQueryToken = (
   }
   return false;
 };
+
+export const isJson = (str: string) => {
+  if (typeof str !== 'string') return false;
+  try {
+    const res = JSON.parse(str);
+    return typeof res === 'object';
+  } catch (e) {
+    return false;
+  }
+};

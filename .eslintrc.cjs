@@ -19,15 +19,15 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-undef': 'off',
     semi: [2, 'always'],
-    indent: [
-      1,
-      2,
-      {
-        SwitchCase: 1,
-        flatTernaryExpressions: true
-      }
-    ],
-
+    // indent: [
+    //   'error',
+    //   2,
+    //   {
+    //     SwitchCase: 1,
+    //     flatTernaryExpressions: true
+    //   }
+    // ],
+    indent: ['error', 2],
     // 函数括号前的有空格
     'space-before-function-paren': ['off'],
 

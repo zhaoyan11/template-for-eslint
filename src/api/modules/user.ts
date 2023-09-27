@@ -4,3 +4,5 @@ import request from '../index';
 export const getUserInfo = (): Promise<any> => {
   return request({ url: '/sys/user', method: 'GET' });
 };
+
+// http://bitbuilder.sit.ninetechone.com/api/sys/menu/config?appId=1124
