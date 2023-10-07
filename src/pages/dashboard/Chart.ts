@@ -168,7 +168,7 @@ export function getXAxis(dimension: any[], data: any[]) {
   };
 }
 
-export function getYAxis(showPercentage: boolean) {
+export function getYAxis(showPercentage = false) {
   return {
     type: 'value',
     splitLine: {
@@ -191,7 +191,7 @@ export function getYAxis(showPercentage: boolean) {
   };
 }
 
-export function getSeries(quota: any[], data: any[], showPercentage: boolean = false, showLabel = true) {
+export function getSeries(quota: any[], data: any[], showPercentage: boolean = false) {
   return quota.map((q: any) => {
     let sum = 0;
     data.forEach((item: any) => {
@@ -244,6 +244,8 @@ export function getOptions(props: any) {
       options.xAxis = options.yAxis;
       options.yAxis = t;
     }
+
+    return options;
   }
 
   if ([DB_WIDGET.LINE, DB_WIDGET.AREA_LINE].includes(type)) {
@@ -252,11 +254,11 @@ export function getOptions(props: any) {
       item.smooth = chartConfig?.displayType === DisplayLineType.CURVE || undefined;
       item.areaStyle = type === DB_WIDGET.AREA_LINE ? {} : undefined;
     });
+
+    return options;
   }
 
   if (type === DB_WIDGET.PIE) {
-    delete options.xAxis;
-    delete options.yAxis;
     options.series.forEach((item: any) => {
       item.type = 'pie';
       item.radius = '65%';
@@ -264,6 +266,13 @@ export function getOptions(props: any) {
         show: false
       };
     });
+
+    return {
+      color: options.seriesColor,
+      legend: options.legend,
+      tooltip: options.tooltip,
+      series: options.series
+    };
   }
 
   if (type === DB_WIDGET.FUNNEL) {
@@ -272,23 +281,8 @@ export function getOptions(props: any) {
       item.smooth = chartConfig?.displayType === DisplayLineType.CURVE || undefined;
       item.areaStyle = type === DB_WIDGET.AREA_LINE ? {} : undefined;
     });
+    return options;
   }
-
-  // if (type === DB_WIDGET.GAUGE) {
-  //   options.series.forEach((item: any) => {
-  //     item.type = 'line';
-  //     item.smooth = chartConfig?.displayType === DisplayLineType.CURVE || undefined;
-  //     item.areaStyle = type === DB_WIDGET.AREA_LINE ? {} : undefined;
-  //   });
-  // }
-
-  // if (type === DB_WIDGET.RADAR) {
-  //   options.series.forEach((item: any) => {
-  //     item.type = 'line';
-  //     item.smooth = chartConfig?.displayType === DisplayLineType.CURVE || undefined;
-  //     item.areaStyle = type === DB_WIDGET.AREA_LINE ? {} : undefined;
-  //   });
-  // }
 
   return options;
 }

@@ -50,7 +50,7 @@ interface Props {
   layout: any;
   source: any;
   parentId: string;
-  data: any[];
+  data: any[] | any;
   errText: string;
   imgType: number;
   isHorizonBar: boolean;
@@ -59,6 +59,7 @@ const props = defineProps<Props>();
 
 const chartRef = ref<any>(null);
 onMounted(() => {
+  console.log('props.data', props.data);
   chartRef.value.init(echarts, (chart: any) => {
     chart.setOption(getOptions(props));
     chart.on('click', 'series', (e: any) => {

@@ -8,18 +8,23 @@
   </CompName>
 </template>
 <script setup lang="ts">
-import Chart from './Chart.vue';
-import Quota from './Quota.vue';
-import Table from './Table.vue';
-import Text from './Text.vue';
-import Img from './Img.vue';
-import Iframe from './Iframe.vue';
-import Filter from './Filter.vue';
+import Gauge from './Gauge.vue';
+import Radar from './Radar.vue';
+import Bar from './Bar.vue';
+import Line from './Line.vue';
+import Pie from './Pie.vue';
+import Funnel from './Funnel.vue';
+// import Quota from './Quota.vue';
+// import Table from './Table.vue';
+// import Text from './Text.vue';
+// import Img from './Img.vue';
+// import Iframe from './Iframe.vue';
+// import Filter from './Filter.vue';
 import { computed, onMounted, ref, toRefs, type Ref } from 'vue';
 import { DB_WIDGET, QUOTA_GATHER_SUM_FIELD, SORT_TYPE } from './constants';
 import { checkConfig, handleDbParams, interval } from './Widget';
 import { getChartDataReq } from '@/api/modules/dashboard';
-import { isJson } from '@/utils';
+// import { isJson } from '@/utils';
 
 interface Props {
   id: string;
@@ -39,15 +44,15 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const { runComp, layout, source } = toRefs(props);
+const { layout, source } = toRefs(props);
 const data: Ref<any[] | number | null> = ref(null);
 const isLoading: Ref<boolean> = ref(false);
 const errText = ref('');
 const imgType = ref(0);
 
 function sort(data: any[]): any[] {
-  if (!Array.isArray(data) || data.length < 1) {
-    return [];
+  if (!Array.isArray(data)) {
+    return data;
   }
   const sortParams = layout.value.sort;
   if (!sortParams?.id || sortParams.type === SORT_TYPE.DEFAULT) {
@@ -89,18 +94,16 @@ function sort(data: any[]): any[] {
 
 const CompName = computed(() => {
   const map: any = {
-    Chart,
-    Quota,
-    Table,
-    Img,
-    Text,
-    Iframe,
-    FilterText: Filter,
-    FilterNumber: Filter,
-    FilterDate: Filter,
-    FilterSelect: Filter
+    [DB_WIDGET.BAR]: Bar,
+    [DB_WIDGET.HORIZONTAL_BAR]: Bar,
+    [DB_WIDGET.LINE]: Line,
+    [DB_WIDGET.AREA_LINE]: Line,
+    [DB_WIDGET.PIE]: Pie,
+    [DB_WIDGET.FUNNEL]: Funnel,
+    [DB_WIDGET.GAUGE]: Gauge,
+    [DB_WIDGET.RADAR]: Radar
   };
-  return map[runComp!.value || ''];
+  return map[props.type];
 });
 
 async function loadData() {
@@ -113,25 +116,25 @@ async function loadData() {
   }
   isLoading.value = true;
   const params = handleDbParams(JSON.parse(JSON.stringify(widget)));
-  let { data: widgetData } = await getChartDataReq(params);
-  widgetData = sort(widgetData);
-  widgetData.forEach((item: any) => {
-    Object.keys(item).forEach(key => {
-      if (isJson(item[key]?.label)) {
-        const json = JSON.parse(item[key].label);
-        if (Array.isArray(json)) {
-          item[key].label = json.join(',');
-        } else {
-          item[key].label = json.name + json.detail;
-        }
-      } else if (typeof item[key]?.label === 'number') {
-        item[key].label = String(item[key].label);
-      }
-      if (isJson(item[key]?.value)) {
-        item[key].value = JSON.parse(item[key].value);
-      }
-    });
-  });
+  const { data: widgetData } = await getChartDataReq(params);
+  // widgetData = sort(widgetData);
+  // widgetData.forEach((item: any) => {
+  //   Object.keys(item).forEach(key => {
+  //     if (isJson(item[key]?.label)) {
+  //       const json = JSON.parse(item[key].label);
+  //       if (Array.isArray(json)) {
+  //         item[key].label = json.join(',');
+  //       } else {
+  //         item[key].label = json.name + json.detail;
+  //       }
+  //     } else if (typeof item[key]?.label === 'number') {
+  //       item[key].label = String(item[key].label);
+  //     }
+  //     if (isJson(item[key]?.value)) {
+  //       item[key].value = JSON.parse(item[key].value);
+  //     }
+  //   });
+  // });
   const nTerms = layout.value.nTerms;
   if (nTerms > 0) {
     data.value = widgetData.slice(0, nTerms);
@@ -159,5 +162,22 @@ function initTimer() {
 }
 
 </script>
-<style scoped lang="less">
+<style lang="scss">
+.chart-container {
+  margin: 32rpx 0 38rpx;
+  border-radius: 23rpx;
+  padding: 32rpx 24rpx;
+  background-color: #fff;
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .title {
+    font-size: 32rpx;
+  }
+  .chart {
+    margin-top: 32rpx;
+  }
+}
 </style>

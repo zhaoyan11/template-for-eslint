@@ -26,7 +26,7 @@ const request = (config: RequestConfig) => {
         ...config.header
       },
       success: res => {
-        console.log('success', res);
+        // console.log('success', res);
         if (res.statusCode === 200) {
           handleCode(res.data, resolve, reject);
         } else {
