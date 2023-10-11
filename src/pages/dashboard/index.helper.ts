@@ -1,6 +1,6 @@
 import { getDashboardReq } from '@/api/modules/dashboard';
 import dayjs from 'dayjs';
-import { DB_WIDGET } from './constants';
+import { DB_WIDGET } from './chart/constants';
 
 export const getFormatValue = (time: string, type: string, index: number) => {
   if (!time) return '';
@@ -60,142 +60,114 @@ const changeValue = (data: any) => {
 export interface Dashboard {
   name: string;
   widgetList: any[];
-  layout: any;
 }
 
+// 图表类型的组件
+export interface ChartWidget {
+  widgetType: DB_WIDGET;
+}
+
+export interface FilterWidget {
+  widgetType: DB_WIDGET;
+}
+
+export type Widget = ChartWidget | FilterWidget
+
 export async function getDashboard(id: string): Promise<Dashboard> {
-  const config: Dashboard = {
+  const dashboard: Dashboard = {
     name: '',
-    widgetList: [],
-    layout: null
+    widgetList: []
   };
 
-  const res: any = await getDashboardReq(id);
-  const data = res?.data;
-  const filterWidgetList = data.componentConfigs.filter(widgetIsFilter);
-  if (data) {
-    if (data.name) {
-      config.name = data.name;
-    }
-    if (data.layoutConfig) {
-      config.layout = JSON.parse(data.layoutConfig);
-    } else {
-      config.layout = null;
-    }
-    if (data.styleConfig) {
-      config.layout = JSON.parse(data.styleConfig);
-    } else {
-      config.layout = null;
-    }
-    if (data.componentConfigs && data.componentConfigs.length) {
-      config.widgetList = data.componentConfigs.map((item: any) => {
-        item.children = [];
-        item.listId = item.id;
-        item.id = item.componentKey;
-        item.classify = item.componentType;
-        item.type = item.chartType;
-        item.layout = JSON.parse(item.layoutConfig);
-        item.styleConfig = JSON.parse(item.styleConfig);
-        item.source = item.chartConfig;
-        let sort;
-        if (item.source) {
-          item.chartId = item.source.id;
-          item.source.formId = item.source.targetId;
-          item.source.quota = item.source.quota.map((item: any) => {
-            item.display = item.display ? JSON.parse(item.display) : '';
-            return item;
-          });
-          if (item.source.sort) {
-            sort = {
-              id: item.source.sort.id,
-              type: item.source.sort.type
-            };
-          }
-          // 配置文本组件筛选条件
-          if (filterWidgetList.length > 0) {
-            item.source.filtersText = [];
-            filterWidgetList.forEach((item: any) => {
-              const filterTargetAry = item.chartFilter.target;
-              const defaultValue = item.chartFilter.defaultValue;
-              filterTargetAry.forEach((targetItem: any) => {
-                if (
-                  targetItem.type === 1 &&
-                  targetItem.field &&
-                  targetItem.componentKey === item.id
-                ) {
-                  if (hasValidItem(defaultValue.value)) {
-                    item.source.filtersText.push({
-                      condition: defaultValue?.condition ?? 'CONTAINS',
-                      field: targetItem.field,
-                      type: defaultValue.type,
-                      value: changeValue(defaultValue)
-                    });
-                  }
-                } else if (
-                  targetItem.type === 2 &&
-                  item.source.collectId === targetItem.collectId &&
-                  targetItem.field &&
-                  item.source.quota.length > 0
-                ) {
-                  if (hasValidItem(defaultValue.value)) {
-                    item.source.filtersText.push({
-                      condition: defaultValue?.condition ?? 'CONTAINS',
-                      field: targetItem.field,
-                      type: defaultValue.type,
-                      value: changeValue(defaultValue)
-                    });
-                  }
-                }
+  const { data } = await getDashboardReq(id);
+  if (!data) {
+    return dashboard;
+  }
+  dashboard.name = data.name || '';
+  dashboard.widgetList = data.componentConfigs;
+  const filterWidgetList = data.componentConfigs.filter(isValidFilter);
+  if (Array.isArray(dashboard.widgetList)) {
+    dashboard.widgetList.forEach((item: any) => {
+      item.listId = item.id;
+      item.id = item.componentKey;
+      delete item.componentKey;
+      item.classify = item.componentType;
+      delete item.componentType;
+      item.type = item.chartType;
+      delete item.chartType;
+      item.layout = JSON.parse(item.layoutConfig);// 设计页面的高级设置-功能配置：如柱状图堆叠、图例显示位置、显示前n条、定时刷新等
+      item.styleConfig = JSON.parse(item.styleConfig);
+      delete item.styleConfig;
+      item.source = item.chartConfig;// 维度、指标、过滤、筛选、下钻等配置项
+      delete item.chartConfig;
+      const sort = item.source?.sort;
+      if (item.source) {
+        delete item.source.page;
+        delete item.source.type;
+        delete item.source.gatherType;
+        delete item.source.sort;
+        item.chartId = item.source.id;
+        delete item.source.id;
+        item.source.formId = item.source.targetId;
+        delete item.source.targetId;
+        item.source.quota = item.source.quota.map((item: any) => {
+          item.display = item.display ? JSON.parse(item.display) : '';
+          return item;
+        });
+        // 配置文本组件筛选条件
+        item.source.filtersText = [];
+        filterWidgetList.forEach((item: any) => {
+          const defaultValue = item.chartFilter.defaultValue;
+          const filterTargetAry = item.chartFilter.target;
+          filterTargetAry.forEach((targetItem: any) => {
+            const { type, field, componentKey, collectId } = targetItem;
+            const case1 = type === 1 && field && componentKey === item.id; // 作用到图表上
+            const case2 = type === 2 && field && item.source.collectId === collectId && item.source.quota.length; // 作用到数据集上
+            if (case1 || case2) {
+              item.source.filtersText.push({
+                condition: defaultValue?.condition ?? 'CONTAINS',
+                field: targetItem.field,
+                type: defaultValue.type,
+                value: changeValue(defaultValue)
               });
-            });
-          }
-
-          delete item.source.sort;
-          delete item.source.id;
-          delete item.source.page;
-          delete item.source.type;
-          delete item.source.gatherType;
-          delete item.source.targetId;
-          item.source.drillDownDimension =
-            item.source.drillDownDimension || [];
-          try {
-            item.source.originDimension = [...item.source.dimension];
-            item.source.originFilters = JSON.parse(JSON.stringify(item.source.filter));
-          } catch (e) {
-            item.source.originDimension = [];
-            item.source.originFilters = null;
-          }
+            }
+          });
+        });
+        try {
+          item.source.originDimension = [...item.source.dimension];
+          item.source.originFilters = JSON.parse(JSON.stringify(item.source.filter));
+        } catch (e) {
+          item.source.originDimension = [];
+          item.source.originFilters = null;
         }
+      }
 
-        if (item.layout) {
-          item.runComp = item.layout.runComp;
-          item.configComp = item.layout.configComp;
-          item.silent = item.layout.silent;
-          item.layout.sort = sort || null;
-
-          delete item.layout.runComp;
-          delete item.layout.configComp;
-          delete item.layout.silent;
+      if (item.layout) {
+        item.runComp = item.layout.runComp;
+        delete item.layout.runComp;
+        item.configComp = item.layout.configComp;
+        delete item.layout.configComp;
+        item.silent = item.layout.silent;
+        delete item.layout.silent;
+        item.layout.sort = null;
+        if (sort) {
+          item.layout.sort = {
+            id: sort.id,
+            type: sort.type
+          };
         }
+      }
 
-        delete item.componentKey;
-        delete item.componentType;
-        delete item.chartType;
-        delete item.layoutConfig;
-        delete item.styleConfig;
-        delete item.chartConfig;
-        if (item.parentId === '0') {
-          item.parentId = '';
-        }
-        return item;
-      });
-    } else {
-      config.widgetList = [];
-    }
+      if (item.parentId === '0') {
+        item.parentId = '';
+      }
+    });
+  } else {
+    dashboard.widgetList = [];
   }
 
-  config.widgetList = buildTree(config.widgetList);
-  return config;
+  dashboard.widgetList = buildTree(dashboard.widgetList);
+  return dashboard;
 };
 
 function buildTree(widgetList: any[]): any[] {
@@ -205,41 +177,51 @@ function buildTree(widgetList: any[]): any[] {
   const hashMap: any = {};
   for (let i = 0; i < widgetList.length; i++) {
     const widget = widgetList[i];
-    hashMap[widget.id] = widget;
+    hashMap[widget.componentKey] = widget;
   }
   const result: any[] = [];
   for (let i = 0; i < widgetList.length; i++) {
     const widget = widgetList[i];
     if ([
+      // 栅格布局组件，扔掉
       DB_WIDGET.GRID,
       DB_WIDGET.GRID_PANE
     ].includes(widget.type)) {
       continue;
     }
-    const parentId = widget.parentId;
-    if (parentId === '') {
+
+    const parent = hashMap[widget.parentId];
+    if (!parent) {
+      // 普通顶层组件
       result.push(widget);
-    } else {
-      const parent = hashMap[parentId];
-      if (parent.type === DB_WIDGET.GRID_PANE) {
-        // 如果是在grid组件中的元素，就放到和grid平级的位置
-        const grid = hashMap[parent.parentId];
-        if (grid.parentId === '') {
-          result.push(widget);
-        } else {
-          hashMap[grid.parentId].children = hashMap[grid.parentId].children || [];
-          hashMap[grid.parentId].children.push(widget);
-        }
+      continue;
+    }
+    if (parent.type === DB_WIDGET.GRID_PANE) {
+      // 如果是在grid组件中的元素，就放到和grid平级的位置
+      const grid = hashMap[parent.parentId];
+      if (!hashMap[grid.parentId]) {
+        // 当前栅格是顶层组件
+        result.push(widget);
       } else {
-        hashMap[parentId].children = hashMap[parentId].children || [];
-        hashMap[parentId].children.push(widget);
+        hashMap[grid.parentId].children = hashMap[grid.parentId].children || [];
+        hashMap[grid.parentId].children.push(widget);
       }
+      continue;
+    }
+    if (parent.type === DB_WIDGET.TAB_COL || parent.type === DB_WIDGET.TAB) {
+      parent.children = parent.children || [];
+      parent.children.push(widget);
     }
   }
   return result;
 }
 
-function widgetIsFilter(widget: any): boolean {
+/**
+ * 判断是不是filter类型的widget
+ * @param widget
+ * @returns
+ */
+function isValidFilter(widget: any): boolean {
   if (!widget) {
     return false;
   }
@@ -251,8 +233,11 @@ function widgetIsFilter(widget: any): boolean {
   };
   try {
     const configComp = JSON.parse(widget.layoutConfig).configComp;
-    return map[configComp];
+    if (map[configComp]) {
+      const defaultValue = widget.chartFilter.defaultValue;
+      return hasValidItem(defaultValue.value);
+    }
   } catch (e) {
-    return false;
   }
+  return false;
 }

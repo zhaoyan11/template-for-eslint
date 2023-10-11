@@ -14,16 +14,35 @@
 
 <script setup lang="ts">
 import Widget from './Widget.vue';
-import { ref } from 'vue';
+import { provide, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getDashboard, type Dashboard } from './index.helper';
 
 const dashboard = ref<Dashboard | null>(null);
 
 onLoad(async(option: any) => {
-  dashboard.value = await getDashboard(option.id);
-  console.log(dashboard.value.widgetList);
+  const dashboardId = option.id;
+  dashboard.value = await getDashboard(dashboardId);
 });
+
+const dashboardEventBus = {
+  listener: {},
+  on(eventName: string, cb: (args: any[]) => void) {
+    const listener = dashboardEventBus.listener as any;
+    if (!Array.isArray(listener[eventName])) {
+      listener[eventName] = [];
+    }
+    listener[eventName].push(cb);
+  },
+  emit(eventName: string, ...data: any[]) {
+    const callbacks = (dashboardEventBus.listener as any)[eventName];
+    callbacks?.forEach((cb: any) => {
+      cb.apply(null, data);
+    });
+  }
+};
+
+provide('dashboardEventBus', dashboardEventBus);
 
 </script>
 
@@ -33,6 +52,8 @@ onLoad(async(option: any) => {
   width: 100%;
 }
 .dashboard-page {
+  box-sizing: border-box;
+  height: 100%;
   font-family: PingFangSC;
   font-size: 32rpx;
   line-height: 1.4;
@@ -41,6 +62,11 @@ onLoad(async(option: any) => {
   background-color: #f8fafc;
 }
 .widget-list {
-  padding: 0 24rpx;
+  box-sizing: border-box;
+  padding: 32rpx 24rpx;
+  height: calc(100% - var(--status-bar-height));
+  :last-child {
+    margin-bottom: 0;
+  }
 }
 </style>

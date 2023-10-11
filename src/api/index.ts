@@ -8,14 +8,16 @@ const request = (config: RequestConfig) => {
   const token = uni.getStorageSync('token') || '';
 
   let loadingStatus = true;
-  setTimeout(() => {
-    if (loadingStatus && config.loading) {
-      uni.showLoading({
-        title: '加载中',
-        mask: true
-      });
-    }
-  }, 800); // 800毫秒后如果loadingStatus === false 则表示请求返回了，不显示loading
+  if (!config.silent) {
+    setTimeout(() => {
+      if (loadingStatus && config.loading) {
+        uni.showLoading({
+          title: '加载中',
+          mask: true
+        });
+      }
+    }, 800); // 800毫秒后如果loadingStatus === false 则表示请求返回了，不显示loading
+  }
   return new Promise((resolve, reject) => {
     uni.request({
       url: import.meta.env?.VITE_APP_API_URL + config.url,
@@ -25,7 +27,12 @@ const request = (config: RequestConfig) => {
         authorization: token,
         ...config.header
       },
+      responseType: config.responseType || 'json',
       success: res => {
+        if (config.silent) {
+          resolve(res);
+          return;
+        }
         // console.log('success', res);
         if (res.statusCode === 200) {
           handleCode(res.data, resolve, reject);
@@ -38,10 +45,14 @@ const request = (config: RequestConfig) => {
         }
       },
       fail: err => {
+        if (config.silent) {
+          reject(err);
+          return;
+        }
         handleCode(err, resolve, reject);
       },
       complete: () => {
-        if (loadingStatus && config.loading) {
+        if (!config.silent && loadingStatus && config.loading) {
           uni.hideLoading();
           loadingStatus = false;
         }

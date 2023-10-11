@@ -1,4 +1,4 @@
-import { CHART_DIMENSION_LIMIT, CHART_QUOTA_LIMIT } from './constants';
+import { CHART_DIMENSION_LIMIT, CHART_QUOTA_LIMIT } from './chart/constants';
 
 export function handleDbParams(data: any) {
   const item = JSON.parse(JSON.stringify(data));
@@ -13,7 +13,6 @@ export function handleDbParams(data: any) {
   }
 
   return {
-    randomId: randomStr(), // 避免复制时浏览器拦截重复请求
     dimension: item.source.dimension,
     quota: item.source.quota.map((item: any) => {
       item.display = item.display ? JSON.stringify(item.display) : '';
@@ -29,16 +28,16 @@ export function handleDbParams(data: any) {
   };
 };
 
-export function randomStr(len = 8): string {
-  const source = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let s = '';
-  for (let i = 0; i < len; i++) {
-    const r = Math.random();
-    const x = Math.floor(r * source.length);
-    s += source[x];
-  }
-  return s;
-}
+// export function randomStr(len = 8): string {
+//   const source = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+//   let s = '';
+//   for (let i = 0; i < len; i++) {
+//     const r = Math.random();
+//     const x = Math.floor(r * source.length);
+//     s += source[x];
+//   }
+//   return s;
+// }
 
 export function checkConfig(widget: any): boolean {
   const { type, source } = widget;

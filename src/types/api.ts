@@ -15,4 +15,6 @@ export interface RequestConfig {
   loading?: boolean;
   timeout?: string;
   timeoutTip?: string;
+  responseType?: string;
+  silent?: boolean; // 只发出请求，没有loading效果、message提醒
 }
