@@ -177,7 +177,7 @@ function buildTree(widgetList: any[]): any[] {
   const hashMap: any = {};
   for (let i = 0; i < widgetList.length; i++) {
     const widget = widgetList[i];
-    hashMap[widget.componentKey] = widget;
+    hashMap[widget.id] = widget;
   }
   const result: any[] = [];
   for (let i = 0; i < widgetList.length; i++) {

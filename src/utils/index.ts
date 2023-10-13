@@ -84,3 +84,13 @@ export const dateFormat = (date: Date, fmt = 'YYYY-mm-dd') => {
   }
   return fmt;
 };
+
+/**
+ * @example trimEnd('123万元', '元') === '123万'
+ */
+export function trimEnd(str: string, cutEndStr: string) {
+  if (str.endsWith(cutEndStr)) {
+    return str.slice(0, str.length - cutEndStr.length);
+  }
+  return str;
+}

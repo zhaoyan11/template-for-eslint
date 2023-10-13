@@ -1,13 +1,12 @@
 <template>
-  <component :is="comp" v-bind="$props" />
+  <component class="widget" :is="comp" v-bind="$props" />
 </template>
 <script setup lang="ts">
 import Chart from './chart/Index.vue';
-import Quota from './Quota.vue';
-import Table from './Table.vue';
 import Text from './Text.vue';
 import Img from './Img.vue';
-import Iframe from './Iframe.vue';
+import WebPage from './WebPage.vue';
+import Tab from './Tab.vue';
 import Filter from './Filter.vue';
 import { computed } from 'vue';
 import { DB_WIDGET } from './chart/constants';
@@ -40,15 +39,16 @@ const comp = computed(() => {
     [DB_WIDGET.FUNNEL]: Chart,
     [DB_WIDGET.GAUGE]: Chart,
     [DB_WIDGET.RADAR]: Chart,
-    [DB_WIDGET.QUOTA]: Quota,
-    [DB_WIDGET.TABLE]: Table,
+    [DB_WIDGET.QUOTA]: Chart,
+    [DB_WIDGET.TABLE]: Chart,
     [DB_WIDGET.TEXT]: Text,
     [DB_WIDGET.IMG]: Img,
-    [DB_WIDGET.IFRAME]: Iframe,
+    [DB_WIDGET.IFRAME]: WebPage,
     [DB_WIDGET.FILTER_DATE]: Filter,
     [DB_WIDGET.FILTER_NUMBER]: Filter,
     [DB_WIDGET.FILTER_SELECT]: Filter,
-    [DB_WIDGET.FILTER_TEXT]: Filter
+    [DB_WIDGET.FILTER_TEXT]: Filter,
+    [DB_WIDGET.TAB]: Tab
   };
   return map[props.type];
 });
@@ -56,5 +56,13 @@ const comp = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-
+.widget {
+  overflow: hidden;
+  margin: 0 0 32rpx;
+  border-radius: 24rpx;
+  background-color: #fff;
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
 </style>

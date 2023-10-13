@@ -54,14 +54,14 @@ provide('dashboardEventBus', dashboardEventBus);
 .dashboard-page {
   box-sizing: border-box;
   height: 100%;
-  font-family: PingFangSC;
+  font-family: HelveticaNeue, PingFangSC, sans-serif;
   font-size: 32rpx;
   line-height: 1.4;
-  font-weight: 500;
   color: #1D2129;
   background-color: #f8fafc;
 }
 .widget-list {
+  overflow: auto;
   box-sizing: border-box;
   padding: 32rpx 24rpx;
   height: calc(100% - var(--status-bar-height));
